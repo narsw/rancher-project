@@ -1,0 +1,21 @@
+version: '2'
+volumes:
+  jupyter-notebook_work:
+    driver: local
+services:
+  jupyter-notebook:
+    image: jupyter/datascience-notebook
+    volumes:
+    - jupyter-notebook_work:/home/jovyan/work
+    ports:
+    - 8888:8888/tcp
+    environment:
+    - JUPYTER_ENABLE_LAB=yes
+    command: start-notebook.sh --NotebookApp.token=''
+  jupyter-notebook-lb:
+    image: rancher/lb-service-haproxy:v0.7.5
+    ports:
+    - 8888:8888/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin
+      io.rancher.container.create_agent: 'true'
