@@ -1,0 +1,33 @@
+version: '2'
+volumes:
+  zoneminder_conf:
+    driver: local
+  zoneminder_cache:
+    driver: local
+services:
+  zoneminder:
+    image: dlandon/zoneminder.master
+    shm_size: 2G
+    environment:
+      TZ: America/New_York
+      SHMEM: 50%
+      PUID: 99
+      PGID: 100
+      INSTALL_HOOK: 0
+      INSTALL_FACE: 0
+      INSTALL_TINY_YOLO: 0
+      INSTALL_YOLO: 0
+    volumes:
+    - zoneminder_conf:/config
+    - zoneminder_cache:/var/cache/zoneminder
+    ports:
+  #  - 8443:443/tcp
+    - 9000:9000/tcp
+  zoneminder-lb:
+    image: rancher/lb-service-haproxy:v0.7.5
+    ports:
+    - 8085:8085/tcp
+    - 8443:8443/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin
+      io.rancher.container.create_agent: 'true'
