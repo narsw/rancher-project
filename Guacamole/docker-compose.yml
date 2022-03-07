@@ -1,0 +1,61 @@
+version: "2"
+services:
+
+  database:
+    image: mariadb
+    environment:
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_ONETIME_PASSWORD: 'true'
+      MYSQL_PASSWORD: guacamole_password
+      MYSQL_RANDOM_ROOT_PASSWORD: 'true'
+      MYSQL_USER: guacamole_user
+    volumes_from:
+    - database-data
+    labels:
+      io.rancher.sidekicks: setup-get-db-script,database-data
+
+  guacamole:
+    image: guacamole/guacamole:latest
+    environment:
+      GUACD_HOSTNAME: guacd
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_HOSTNAME: database
+      MYSQL_PASSWORD: guacamole_password
+      MYSQL_USER: guacamole_user
+    depends_on:
+      - database
+      - guacd
+      
+  guacd:
+    image: guacamole/guacd:latest
+
+  guacamole-lb:
+    image: rancher/lb-service-haproxy:v0.7.5
+    ports:
+    - 8086:8086/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin
+      io.rancher.container.create_agent: 'true'
+
+  setup-get-db-script:
+    image: guacamole/guacamole:latest
+    network_mode: none
+    volumes_from:
+    - database-data
+    command:
+    - bash
+    - -c
+    - /opt/guacamole/bin/initdb.sh --mysql > /docker-entrypoint-initdb.d/initdb.sql
+    labels:
+      io.rancher.container.start_once: 'true'
+      
+  database-data:
+    image: busybox
+    entrypoint:
+    - /bin/true
+    network_mode: none
+    volumes:
+    - /docker-entrypoint-initdb.d
+    - /var/lib/mysql
+    labels:
+      io.rancher.container.start_once: 'true'
