@@ -1,0 +1,37 @@
+version: '2'
+
+volumes:
+  growi_data:
+    driver: local
+  mongo_configdb:
+    driver: local
+  mongo_db:
+    driver: local
+    
+services:
+  growi:
+    image: weseek/growi
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/growi
+      - PASSWORD_SEED=changeme
+    restart: unless-stopped
+    volumes:
+      - growi_data:/data
+
+  mongo:
+    image: mongo:3.6
+    restart: unless-stopped
+    volumes:
+      - mongo_configdb:/data/configdb
+      - mongo_db:/data/db
+
+  growi-lb:
+    image: rancher/lb-service-haproxy:v0.9.6
+    ports:
+    - 8087:8087/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin,agent
+      io.rancher.container.agent_service.drain_provider: 'true'
+      io.rancher.container.create_agent: 'true'
