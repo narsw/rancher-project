@@ -1,0 +1,14 @@
+version: '2'
+volumes:
+  sqldesigner-file-data:
+    driver: local
+  sqldesigner-sqlite-data:
+    driver: local
+services:
+  sqldesigner:
+    image: denlabo/sqldesigner
+    volumes:
+    - sqldesigner-file-data:/backend-data/php-file/
+    - sqldesigner-sqlite-data:/backend-data/php-sqlite/
+    ports:
+    - 8889:80/tcp
